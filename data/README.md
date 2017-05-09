@@ -57,9 +57,5 @@ The following table shows the first five rows of the data.
 
 ## References  
 
-Shen, H. and Gao, S., 2007. Research on fracture identification based on BP
-  neural network. Fault-Block Oil Gas Field 14 (2), 60-62 (in Chinese with
-  English abstract).  
-
 Shi, Gaungren, 2014. Data Mining and Knowledge Discovery for Geoscientists.
   Petroleum Industry Press, Elsevier.

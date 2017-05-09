@@ -1,6 +1,7 @@
 library('tools')
 library('ggdocumentation')
 library('ggthemes')
+library('cowplot')
 
 read.tensorboard.log <- function(fname) {
     
@@ -19,7 +20,7 @@ read.tensorboard.log <- function(fname) {
     
 }
 
-plot_train_vs_valid <- function(train, valid, fname, ytitle='', title='') {
+plot_train_vs_valid <- function(train, valid, ytitle='', title='') {
     
     if (!is.data.frame(train) | ncol(train) != 3) stop('Given parameter "train" must be a data frame with 3 columns')
     if (!is.data.frame(valid) | ncol(valid) != 3) stop('Given parameter "valid" must be a data frame with 3 columns')
@@ -36,30 +37,34 @@ plot_train_vs_valid <- function(train, valid, fname, ytitle='', title='') {
         scale_color_manual(name='', values=c('dodgerblue', 'forestgreen')) +
         theme(
             title = element_text(size=20),
-            axis.title = element_text(size=20),
-            axis.text = element_text(size=20),
-            legend.position = 'bottom'
+            axis.title = element_text(size=24),
+            axis.text = element_text(size=24),
+            legend.position = 'bottom',
+            legend.text = element_text(size=20)
         )
     
-    png(fname, width=1200, height=800, units='px')    
-    doc_plot(g,
-          author='Joshua Poirier',
-          author_title='Geoscientist',
-          #data_source='Source: Shi, 2014',
-          img_sponsor='reference/NEOS-White_small.png',
-          base_size=24)
-    dev.off()
+    g
     
 }
 
 # load data
-train_acc <- read.tensorboard.log('tensorboard_logs/run_WMZTT0,tag_Accuracy.csv')
-valid_acc <- read.tensorboard.log('tensorboard_logs/run_WMZTT0,tag_Accuracy-Validation.csv')
-train_los <- read.tensorboard.log('tensorboard_logs/run_WMZTT0,tag_Loss.csv')
-valid_los <- read.tensorboard.log('tensorboard_logs/run_WMZTT0,tag_Loss-Validation.csv')
+train_acc <- read.tensorboard.log('tensorboard_logs/run_c-PD6OTI,tag_Accuracy.csv')
+valid_acc <- read.tensorboard.log('tensorboard_logs/run_c-PD6OTI,tag_Accuracy-Validation.csv')
+train_los <- read.tensorboard.log('tensorboard_logs/run_c-PD6OTI,tag_Loss.csv')
+valid_los <- read.tensorboard.log('tensorboard_logs/run_c-PD6OTI,tag_Loss-Validation.csv')
 
 # build plots
-plot_train_vs_valid(train_acc, valid_acc, fname='figures/run_WMZTT0_accuracy.png', 
-                    ytitle='Accuracy', title='Fracture prediction accuracy during neural network training')
-plot_train_vs_valid(train_los, valid_los, fname='figures/run_WMZTT0_loss.png', 
-                    ytitle='Loss (Categorical Cross-Entropy)', title='Fracture prediction loss during neural network training')
+g1 <- plot_train_vs_valid(train_acc, valid_acc, 
+                          ytitle='Accuracy', title='Neural Network Accuracy')
+g2 <- plot_train_vs_valid(train_los, valid_los, 
+                          ytitle='Loss', title='Neural Network Loss')
+
+g <- plot_grid(g1, g2, ncol=2)
+
+png('figures/nn-performance.png', width=1800, height=800, units='px')    
+doc_plot(g,
+         author='Joshua Poirier',
+         author_title='Geoscientist',
+         img_sponsor='reference/NEOS-White_small.png',
+         base_size=24)
+dev.off()

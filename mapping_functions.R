@@ -1,5 +1,6 @@
 library('rgdal')
 library('ggmap')
+library('ggsn')
 library('ggdocumentation')
 library('cowplot')
 library('RColorBrewer')
@@ -17,7 +18,9 @@ flt <- readOGR('data/shp', 'Biyang_Faults')
 flt.points <- fortify(flt)
 
 # build and return map
-g1 <- ggmap(mapImage) +
+g1 <- ggmap(mapImage) + 
+    scalebar(dist=10, dd2km=TRUE, model='WGS84', location='topright', 
+             y.min=32.3, y.max=33, x.min=112.78, x.max=113.6) +
     geom_polygon(aes(x=long, y=lat, group=group, fill=group),
                  data=sag.points,
                  color='gray55',
@@ -38,6 +41,7 @@ g1 <- ggmap(mapImage) +
         legend.text = element_text(size=18),
         legend.key.size = unit(2.5, 'lines')
     )
+#g1 <- north2(g1)
 
 # REGIONAL MAP OF CHINA
 # ##############################################################################
@@ -52,7 +56,9 @@ nanxiang.points <- fortify(nanxiang)
 nanxiang.points$China <- 'Nanxiang Basin'
 data <- rbind(henan.points, nanxiang.points)
 
-g2 <- ggmap(mapImage) +
+g2 <- ggmap(mapImage) + 
+    scalebar(dist=500, dd2km=TRUE, model='WGS84', location='topright', 
+             y.min=23.75, y.max=45, x.min=102, x.max=127.5) +
     geom_polygon(aes(x=long, y=lat, group=China, fill=China),
                  data=data,
                  color='gray55',
@@ -78,7 +84,9 @@ mapImage <- get_map(location=c(lon=112, 32.65),
 nanxiangdet <- readOGR('data/shp', 'Nanxiang_Details')
 nanxiangdet.points <- fortify(nanxiangdet)
 
-g3 <- ggmap(mapImage) +
+g3 <- ggmap(mapImage) + 
+    scalebar(dist=50, dd2km=TRUE, model='WGS84', location='topright', 
+             y.min=31.3, y.max=34, x.min=110.4, x.max=113.6) +
     geom_polygon(aes(x=long, y=lat, group=group, fill=group),
                  data=nanxiangdet.points,
                  color='gray55',
