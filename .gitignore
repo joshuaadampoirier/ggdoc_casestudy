@@ -34,3 +34,6 @@ vignettes/*.pdf
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints/
+
+# reference files
+reference/
