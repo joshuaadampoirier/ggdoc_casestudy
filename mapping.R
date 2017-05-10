@@ -48,22 +48,17 @@ g1 <- ggmap(mapImage) +
 mapImage <- get_map(location=c(lon=115, lat=35),
                     color='color', source='google', zoom=5)
 
-henan <- readOGR('data/shp', 'Henan_Province')
-henan.points <- fortify(henan)
-henan.points$China <- 'Henan Province'
 nanxiang <- readOGR('data/shp', 'Nanxiang_Basin')
 nanxiang.points <- fortify(nanxiang)
-nanxiang.points$China <- 'Nanxiang Basin'
-data <- rbind(henan.points, nanxiang.points)
 
 g2 <- ggmap(mapImage) + 
     scalebar(dist=500, dd2km=TRUE, model='WGS84', location='topright', 
              y.min=23.75, y.max=45, x.min=102, x.max=127.5) +
-    geom_polygon(aes(x=long, y=lat, group=China, fill=China),
-                 data=data,
+    geom_polygon(aes(x=long, y=lat, group=group),
+                 data=nanxiang.points,
                  color='gray55',
+                 fill='firebrick',
                  alpha=0.3) +
-    scale_fill_manual(values=c('gray55', 'firebrick')) +
     theme(
         axis.title = element_blank(),
         axis.text = element_blank(),
@@ -118,6 +113,6 @@ doc_plot(g,
          author='Joshua Poirier',
          author_title='Geoscientist',
          img_sponsor='reference/NEOS-White_small.png',
-         data_source='Sources: Dong (2015), GADM, Google, Guo (2014)',
+         data_source='Sources: Dong (2015), Google, Guo (2014), Shi (2014)',
          base_size=32)
 dev.off()

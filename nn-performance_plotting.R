@@ -20,20 +20,14 @@ read.tensorboard.log <- function(fname) {
     
 }
 
-plot_train_vs_valid <- function(train, valid, ytitle='', title='') {
+plot_train_vs_valid <- function(x, color='black', ytitle='', title='') {
     
-    if (!is.data.frame(train) | ncol(train) != 3) stop('Given parameter "train" must be a data frame with 3 columns')
-    if (!is.data.frame(valid) | ncol(valid) != 3) stop('Given parameter "valid" must be a data frame with 3 columns')
+    if (!is.data.frame(x) | ncol(x) != 3) stop('Given parameter "x" must be a data frame with 3 columns')
     
-    train$type <- 'Training'
-    valid$type <- 'Validation'
-    
-    data <- rbind(train, valid)
-    
-    g <- ggplot() + theme_economist_white() +
+    g <- ggplot() + theme_grey() +
         labs(x='Training Step Number', y=ytitle, title=title) +
         ylim(0,1) +
-        geom_line(data=data, aes(x=Step, y=Value, col=type), alpha=.5, size=2) + 
+        geom_line(data=x, aes(x=Step, y=Value), col=color, alpha=.5, size=2) + 
         scale_color_manual(name='', values=c('dodgerblue', 'forestgreen')) +
         theme(
             title = element_text(size=20),
@@ -48,16 +42,14 @@ plot_train_vs_valid <- function(train, valid, ytitle='', title='') {
 }
 
 # load data
-train_acc <- read.tensorboard.log('tensorboard_logs/run_c-PD6OTI,tag_Accuracy.csv')
 valid_acc <- read.tensorboard.log('tensorboard_logs/run_c-PD6OTI,tag_Accuracy-Validation.csv')
 train_los <- read.tensorboard.log('tensorboard_logs/run_c-PD6OTI,tag_Loss.csv')
-valid_los <- read.tensorboard.log('tensorboard_logs/run_c-PD6OTI,tag_Loss-Validation.csv')
 
 # build plots
-g1 <- plot_train_vs_valid(train_acc, valid_acc, 
-                          ytitle='Accuracy', title='Neural Network Accuracy')
-g2 <- plot_train_vs_valid(train_los, valid_los, 
-                          ytitle='Loss', title='Neural Network Loss')
+g1 <- plot_train_vs_valid(valid_acc, color='dodgerblue',
+                          ytitle='Accuracy', title='Neural Network Validation Accuracy')
+g2 <- plot_train_vs_valid(train_los, color='forestgreen', 
+                          ytitle='Loss', title='Neural Network Training Loss')
 
 g <- plot_grid(g1, g2, ncol=2)
 
