@@ -1,16 +1,13 @@
-## 1 Cheaper, Faster way to Identify Fractures  
-Joshua Poirier  
-Geoscientist  
-NEOS  
+## Identifying fractures using neural networks  
+Author: Joshua Poirier, Geoscientist  
 May 2017  
 
 ### Abstract  
-One cheaper, faster way to identify fractures is to predict their presence
-using conventional well-logging data and neural networks. This data has
-practical value when the data of the imaging log and core samples are limited.
-This case study comes from Guangren Shi's chapter on Artificial Neural Networks
-from his book "Data Mining and Knowledge Discovery for Geoscientists." You can
-purchase the book from [Amazon](https://www.amazon.com/Data-Mining-Knowledge-Discovery-Geoscientists/dp/0124104371/ref=sr_1_1?ie=UTF8&qid=1490908644&sr=8-1&keywords=data+mining+and+knowledge+discovery+for+geoscientists+%2B+guangren+shi) or directly from the publisher, [Elsevier](https://www.elsevier.com/books/data-mining-and-knowledge-discovery-for-geoscientists/shi/978-0-12-410437-2).  
+In this study I will identify fractures by feeding well log data into a neural
+network. This data has practical value when the data of the imaging log and core
+samples are limited. This case study comes from Guangren Shi's chapter on
+Artificial Neural Networks from his book "Data Mining and Knowledge Discovery
+for Geoscientists." You can purchase the book from [Amazon](https://www.amazon.com/Data-Mining-Knowledge-Discovery-Geoscientists/dp/0124104371/ref=sr_1_1?ie=UTF8&qid=1490908644&sr=8-1&keywords=data+mining+and+knowledge+discovery+for+geoscientists+%2B+guangren+shi) or directly from the publisher, [Elsevier](https://www.elsevier.com/books/data-mining-and-knowledge-discovery-for-geoscientists/shi/978-0-12-410437-2).  
 
 ### Introduction  
 
@@ -24,19 +21,15 @@ Nanxiang Basin in central China. The basin is split into sags and uplifts as
 shown in the lower-right - we're focused on the Biyang Sag in red. The left
 image shows the Biyang Sag in detail. Shi describes the oilfield as being a
 simple structure without faults. This is consistent with Guo (2014) as we see
-no mapped faults near Anpengzhen on the map. Unfortunately, the well locations
-are not available. While this won't prevent me from moving forward with the
-study, it does limit the geologic context for my solution.
+no mapped faults near Anpengzhen on the map.  
 
 ![](figures/biyang_studyarea.png)  
 
-The above map was made using the R script *mapping_functions.R*.
+The above map was made using the R script *mapping.R*.
 
 The data was transcribed from Shi's book and includes data from 33 samples in
-wells An1 and An2, of which he used 29 as learning samples; holding out 4 as a
-test set to evaluate the accuracy of his model. The data features available are
-summarized below. Units are not given as each log has been normalized over the
-interval [0, 1].
+wells An1 and An2. For more information, see the
+[data codebook](https://github.com/joshuaadampoirier/ggdoc_casestudy/tree/master/data).
 
 | Variable name | Description                                                  |
 | ------------- | ------------------------------------------------------------ |
@@ -54,20 +47,9 @@ interval [0, 1].
 
 ### Exploring the Data  
 
-The following table shows a preview of the first five rows of the data.  
-
-| Sample | Well | Depth   | DT     | RHO    | PHIN   | R_XO   | R_LLD  | R_LLS  | R_DS   | IL |
-| ------ | ---- | ------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | -- |
-| 1      | An1  | 3065.13 | 0.5557 | 0.2516 | 0.8795 | 0.3548 | 0.6857 | 0.6688 | 0.0169 | 1  |
-| 2      | An1  | 3089.68 | 0.9908 | 0.0110 | 0.8999 | 0.6792 | 0.5421 | 0.4071 | 0.1350 | 1  |
-| 3      | An1  | 3098.21 | 0.4444 | 0.1961 | 0.5211 | 0.7160 | 0.7304 | 0.6879 | 0.0425 | 1  |
-| 4      | An1  | 3102.33 | 0.4028 | 0.3506 | 0.5875 | 0.6218 | 0.6127 | 0.5840 | 0.0287 | 1  |
-| 5      | An1  | 3173.25 | 0.3995 | 0.3853 | 0.0845 | 0.5074 | 0.8920 | 0.8410 | 0.0510 | 1  |  
-
-The data is sampled where imaging log observations are present. This is
-irregular sampling so a traditional plot of logs isn't going to be terribly
-helpful. Instead I'll plot the correlations between the logs and fracture
-presence.
+The data is sampled where imaging log observations are present. This irregular
+sampling interval won't lend itself to a traditional plot of logs. Instead I'll
+plot the correlations between the logs and fracture presence.
 
 ![](figures/log-correlation.png)  
 
@@ -87,7 +69,19 @@ validation set. If I were to tune hyperparameters based on the testing set, the
 testing set would end up bleeding into the training process. Using a validation
 set will help avoid overfitting.
 
-### Network Architecture  
+### Neural Networks  
+
+Neural networks and deep learning are biologically-inspired machine learning
+techniques for identifying complex patterns in data (Nielsen, 2015). Data is fed
+forward from the input layer through the network to the output layer. Each
+neuron in the hidden and output layer has a value - the weighted sum of the
+neurons in the previous layer. The following figure shows the architecture of
+the network I use in this study. There are 7 input neurons (representing the 7
+well logs), 15 hidden neurons identifying the complex, nonlinear patterns in the
+data, and 2 output neurons (representing the probability of fracture presence
+and absence respectively). This follows Shi's approach.  
+
+![](figures/nn-architecture.png)
 
 [TFLearn](http://tflearn.org) is a Python package that allows you to build a
 neural network by defining the layers. It does a lot of the heavy lifting for
@@ -95,64 +89,38 @@ me - so I don't have to code weight initialization, feed-forward propogation, or
 the backward propogation of errors through the network. I can simply focus on
 the architecture of the network.  
 
-For this network I only deviated from Shi's work mildly. Like Shi, I use 7 input
-neurons corresponding to the well logs we're using to train the network. Like
-Shi, my hiden layer has 15 neurons. Deviating from Shi, I use *rectified
-linear units (ReLU)* for the activation function. Shi uses sigmoids for the
-activations. ReLU's were first used in a network by Hahnloser et al. (2000) and
-(as per LeCun 2015) have since become the most popular activation function for
-deep learning. The output layer (two neurons - one indicating fracture presence,
-the other indicating absence) utilizes the *softmax* activation function to
-ensure the outputs sum to 1, and can be interpreted as probabilities of fracture
-presence/absence. The architecture is shown in the figure below.
-
-![](figures/nn-architecture.png)
-
 ### Training and Evaluating the Network  
 
-To learn, TFLearn feeds the input data forward through the network and
-calculates the probability of fracture presence. Given that TFLearn initializes
-the weights randomly, it's first forward pass is ostensibly not different from
-guessing.
-
-For each training point I know whether or not fractures are present. This
-information has been converted into a number by saying there is 100% probability
-of fracture presence (or 0% for fracture absent observations). If the network
-calculates, let's say 60% probability of fracture presence, then we say there
-are fractures (because it's >50%). The network predicted accurately; however,
-it is still off by 40% (we want it to say 100% probability!). This is the
-difference between *accuracy* and *loss*. The network then backpropogates the
-loss backwards through the network and updates the weights using gradient
-descent. The next step of feed-forward and backpropogation then begins.  
-
 Over many training steps, the neural network learns the nonlinear data patterns
-corresponding to the classifications. The network is trained and validated using
-the Python script *build_network.py*.  
-
-There is some noise as the optimizer tries to minimize the loss, the validation
-accuracy reaches 100% near step 100 and the loss seems to stabilize to 0.15
-around step 200. This is shown in the following figure, created using the R
-script *nn-performance_plotting_functions.R*.
+corresponding to whether or not fractures are present. The network is trained
+and validated using the Python script *build_network.py*.  
 
 ![](figures/nn-performance.png)
 
-When applying the trained network to my hold-out test data set it achieves 100%
-accuracy. This neural network can correctly identify fractures from conventional
-well-logging data!  
+Near step 100 the network starts correctly identifying fracture presence/absence
+with 100% accuracy (as determined from the validation data set). This is shown
+(along with the training *loss*) in the above figure, created using the R script *nn-performance_plotting.R*.
+
+After 200 training steps, I tested the network on my hold-out data. It correctly
+predicted fracture presence/absence with 100% accuracy!  
 
 ### Conclusions  
 
 This study demonstrates that neural networks can be used to correctly identify
-fracture presence using conventional well-logging data. The model can now be
-applied to the full well log data set for wells An1 and An2 in the Biyang Sag of
-the Nanxiang Basin, China. With the knowledge of fracture presence/absence with
-depth, we can make business decisions such as what depths will make ideal perf
-zones.  
+fracture presence using well log data. The model can now be applied to well log
+data elsewhere in the Nanxiang Basin to identify fractures. We can begin chasing
+zones where fractures are present as they provide favorable oil-gas migration
+pathways and increased pore space.  
 
-With a larger data set my network may not perform as successfully. Additional
-training data may require some adjustments to the neural network architecture. A
-few things you may want to consider when applying neural networks to solve
-problems like this one:
+Further, this approach could be applied in other basins around the world to
+identify fractures. Fracture presence in conventional sandstone or carbonate
+plays can be beneficial (as here in the Nanxiang Basin). In unconventional plays
+fractures may absorb frac energy, so we may want to avoid fractures in this
+case. Either way, knowing where fractures are is critical to your operation.
+
+In future studies, larger data sets would be desirable. With more data, you may
+need to make some adjustments to your network to achieve strong results. Here's
+a few things you may want to consider when creating your own neural networks:
 
 * Add additional hidden layers to learn more complex patterns (deep learning)  
 * Regularization (L2-Regularization, Dropout)  
@@ -182,6 +150,9 @@ The R Journal, 5(1).
 
 LeCun, Yann et al. [Deep learning](http://www.nature.com/nature/journal/v521/n7553/full/nature14539.html).
 Nature. Vol. 521. May 2015.  
+
+Nielsen, Michael A. [Neural Networks and Deep Learning](http://neuralnetworksanddeeplearning.com).
+Determination Press. 2015.
 
 Poirier, Joshua. [ggdocumentation](https://github.com/joshuaadampoirier/ggdocumentation).
 GitHub. 2017.  
