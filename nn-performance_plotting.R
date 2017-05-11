@@ -1,6 +1,5 @@
 library('tools')
 library('ggdocumentation')
-library('ggthemes')
 library('cowplot')
 
 read.tensorboard.log <- function(fname) {
